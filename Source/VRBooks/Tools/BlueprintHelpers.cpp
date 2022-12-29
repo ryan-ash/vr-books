@@ -38,3 +38,17 @@ void UBlueprintHelpers::LoadPDF(const FString& Path, TArray<UTexture2D*>& BookPa
     }
 
 }
+
+TArray<FString> UBlueprintHelpers::GetFilesInDirectory(const FString& Directory, const FString& FileExtension)
+{
+    TArray<FString> Files;
+    IFileManager::Get().FindFiles(Files, *Directory, *FileExtension);
+    return Files;
+}
+
+TArray<FString> UBlueprintHelpers::GetDirectoriesInDirectory(const FString& Directory)
+{
+    TArray<FString> Directories;
+    IFileManager::Get().FindFiles(Directories, *Directory, true, false);
+    return Directories;
+}
