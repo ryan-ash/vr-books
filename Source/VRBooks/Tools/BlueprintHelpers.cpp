@@ -2,6 +2,7 @@
 
 #include <Runtime/Launch/Resources/Version.h>
 #include <HAL/PlatformProcess.h>
+#include <Misc/Paths.h>
 
 void UBlueprintHelpers::LoadPDF(const FString& Path, TArray<UTexture2D*>& BookPages)
 {
@@ -49,6 +50,7 @@ TArray<FString> UBlueprintHelpers::GetFilesInDirectory(const FString& Directory,
 TArray<FString> UBlueprintHelpers::GetDirectoriesInDirectory(const FString& Directory)
 {
     TArray<FString> Directories;
-    IFileManager::Get().FindFiles(Directories, *Directory, true, false);
+    FCustomFileMatch FileMatch(Directories, TEXT("*"), false, true);
+	IFileManager::Get().IterateDirectory(*FPaths::GetPath(Directory), FileMatch);
     return Directories;
 }
