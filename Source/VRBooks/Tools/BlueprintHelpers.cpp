@@ -6,20 +6,28 @@
 
 void UBlueprintHelpers::LoadPDF(const FString& Path, TArray<UTexture2D*>& BookPages)
 {
+    FString FileNameWithoutExtension = FPaths::GetBaseFilename(Path);
+
     // Set the command line arguments for the process
     TArray<FString> Arguments;
     Arguments.Add(FString("-density 300"));
-    Arguments.Add(Path);
-    Arguments.Add(FString("current_book.bmp"));
+    FString WrappedPath = FString::Printf(TEXT("\"%s\""), *Path);
+    Arguments.Add(WrappedPath);
+    FString WrappedFileName = FString::Printf(TEXT("\"%s.bmp\""), *FileNameWithoutExtension);
+    Arguments.Add(WrappedFileName);
 
     // Create the process and execute the command line utility
     FString CommandLine = "convert.exe";
     FString ArgumentsString;
     for (const FString& Argument : Arguments)
     {
-        ArgumentsString += Argument;
+        ArgumentsString += Argument + " ";
     }
-    FProcHandle ProcessHandle = FPlatformProcess::CreateProc(*CommandLine, *ArgumentsString, true, false, false, nullptr, 0, nullptr, nullptr);
+    FString CommandLineWithArguments = CommandLine + " " + ArgumentsString;
+    
+    // TODO: FIX THIS
+
+    FProcHandle ProcessHandle = FPlatformProcess::CreateProc(*CommandLineWithArguments, TEXT(""), false, false, false, 0, 0, nullptr, nullptr, nullptr);
 
     // Wait for the process to finish
     FPlatformProcess::WaitForProc(ProcessHandle);
@@ -31,13 +39,18 @@ void UBlueprintHelpers::LoadPDF(const FString& Path, TArray<UTexture2D*>& BookPa
     // Do something with the return code
     if (ReturnCode == 0)
     {
-        // Process completed successfully
+        const auto AllTargetFiles = GetFilesInDirectory(FileNameWithoutExtension, FString(".bmp"));
+        for (const auto& TargetFile : AllTargetFiles)
+        {
+            BookPages.Add(LoadObject<UTexture2D>(nullptr, *TargetFile));
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("Book imported successfully: %s [%d]"), *Path, BookPages.Num());
     }
     else
     {
-        // Process failed with an error
+        UE_LOG(LogTemp, Warning, TEXT("Couldn't import PDF: %s"), *Path);
     }
-
 }
 
 TArray<FString> UBlueprintHelpers::GetFilesInDirectory(const FString& Directory, const FString& FileExtension)
